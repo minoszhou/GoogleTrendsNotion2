@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Google Trends 足球分类（cat=294）</title>
+  <style>
+    body { margin: 0; padding: 1.5rem; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #fafafa; color: #222; }
+    h1 { font-size: clamp(20px, 2.5vw, 28px); margin: 0 0 1rem; text-align: center; }
+    h2 { font-size: clamp(16px, 2vw, 20px); margin: 2.5rem 0 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+    .widget-container { width: 100%; }
+    .widget-container iframe {
+      width: 100% !important;
+      height: 350px !important; /* 固定一个合适的高度 */
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="main-title">加载中…</h1>
+
+  <h2>近 7 天趋势</h2>
+  <div id="panel-7d" class="widget-container"></div>
+
+  <h2>近 1 个月趋势</h2>
+  <div id="panel-1m" class="widget-container"></div>
+
+  <h2>近 3 个月趋势</h2>
+  <div id="panel-3m" class="widget-container"></div>
+
+  <h2>近 12 个月趋势 (1年)</h2>
+  <div id="panel-12m" class="widget-container"></div>
+
+  <script src="https://ssl.gstatic.com/trends_nrtr/4116_RC01/embed_loader.js"></script>
+  <script>
+    // --- 配置区 ---
+    const qs = new URLSearchParams(location.search);
+    const geo = (qs.get("geo") || "US").trim(); // 只保留 geo 作为 URL 参数
+    const CAT = 294; // 固定足球分类
+
+    // --- 更新主标题 ---
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("main-title").textContent = `${geo} 足球分类趋势总览 (${today})`;
+
+    // --- 定义所有需要渲染的时间范围 ---
+    const timeframes = [
+      { id: '7d',  date: 'now 7-d' },
+      { id: '1m',  date: 'today 1-m' },
+      { id: '3m',  date: 'today 3-m' },
+      { id: '12m', date: 'today 12-m' }
+    ];
+
+    // --- 循环渲染所有 Trends 小组件 ---
+    timeframes.forEach(tf => {
+      const container = document.getElementById(`panel-${tf.id}`);
+      if (container) {
+        const exploreQuery = `cat=${CAT}&date=${encodeURIComponent(tf.date)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
+        trends.embed.renderExploreWidget(
+          "RELATED_QUERIES",
+          { "comparisonItem": [{ "geo": geo, "time": tf.date }], "category": CAT, "property": "" },
+          { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
+          container
+        );
+      }
+    });
+  </script>
+</body>
+</html>
