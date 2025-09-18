@@ -7,8 +7,6 @@
   <style>
     body { margin: 0; padding: 1.5rem; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #fafafa; color: #222; }
     h1 { font-size: clamp(20px, 2.5vw, 28px); margin: 0 0 2rem; text-align: center; }
-    h2 { font-size: clamp(18px, 2.2vw, 22px); margin: 3rem 0 1rem; border-bottom: 2px solid #007bff; padding-bottom: 0.5rem; color: #007bff; }
-    h3 { font-size: clamp(16px, 2vw, 20px); margin: 2.5rem 0 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
     .widget-container { width: 100%; margin-bottom: 2rem; }
     .widget-container iframe {
       width: 100% !important;
@@ -17,7 +15,7 @@
       border-radius: 8px;
       display: block;
     }
-    hr { border: 0; height: 3px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0)); margin: 4rem 0; }
+    hr { border: 0; height: 3px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0)); margin: 2rem 0; }
   </style>
 </head>
 <body>
@@ -29,40 +27,30 @@
   <script>
     // --- 配置区 ---
     const qs = new URLSearchParams(location.search);
-    const geoPrimary = (qs.get("geo") || "US").trim(); // 第一个国家来自 URL 参数，默认为 US
-    const geoSecondary = 'CA'; // 第二个国家固定为加拿大 (CA)
+    const geoPrimary = (qs.get("geo") || "US").trim();
+    const geoSecondary = 'CA';
     const CAT = 294;
 
-    // --- 更新主标题 ---
+    // --- 更新主标题 (已按要求简化) ---
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Taipei' });
-    document.getElementById("main-title").textContent = `${geoPrimary} vs ${geoSecondary} 足球分类热门趋势对比 (${today})`;
+    document.getElementById("main-title").textContent = `足球分类趋势总览 (${today})`;
 
     // --- 定义所有需要渲染的时间范围 ---
     const timeframes = [
-      { id: '7d',  date: 'now 7-d',    label: '近 7 天热门趋势' },
-      { id: '1m',  date: 'today 1-m',    label: '近 1 个月热门趋势' },
-      { id: '3m',  date: 'today 3-m',    label: '近 3 个月热门趋势' },
-      { id: '12m', date: 'today 12-m',   label: '近 12 个月热门趋势 (1年)' }
+      { id: '7d',  date: 'now 7-d' },
+      { id: '1m',  date: 'today 1-m' },
+      { id: '3m',  date: 'today 3-m' },
+      { id: '12m', date: 'today 12-m' }
     ];
 
     // --- 获取主容器 ---
     const mainContainer = document.getElementById('main-container');
 
-    // --- 创建一个函数来渲染整个国家的部分，方便复用 ---
+    // --- 创建一个函数来渲染单个国家的部分 ---
     function renderCountrySection(geo) {
-      // 为国家创建一个总标题
-      const countryTitle = document.createElement('h2');
-      countryTitle.textContent = `${geo} 国家热门趋势`;
-      mainContainer.appendChild(countryTitle);
-
       // 循环渲染这个国家的4个时间范围
       timeframes.forEach(tf => {
-        // 创建小标题
-        const subtitle = document.createElement('h3');
-        subtitle.textContent = tf.label;
-        mainContainer.appendChild(subtitle);
-        
-        // 创建用于放置小组件的 div 容器 (ID 必须唯一)
+        // 直接创建用于放置小组件的 div 容器 (ID 必须唯一)
         const containerElement = document.createElement('div');
         containerElement.id = `panel-${geo}-${tf.id}`; // 例如: panel-US-7d
         containerElement.className = 'widget-container';
@@ -81,7 +69,7 @@
 
     // --- 依次渲染两个国家的数据 ---
     renderCountrySection(geoPrimary);
-    mainContainer.appendChild(document.createElement('hr')); // 添加一个华丽的分割线
+    mainContainer.appendChild(document.createElement('hr')); // 添加分割线
     renderCountrySection(geoSecondary);
     
   </script>
