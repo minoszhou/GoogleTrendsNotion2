@@ -6,7 +6,7 @@
   <title>Google Trends 足球分类（cat=294）</title>
   <style>
     body { margin: 0; padding: 1.5rem; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #fafafa; color: #222; }
-    h1 { font-size: clamp(20px, 2.5vw, 28px); margin: 0 0 1rem; text-align: center; }
+    h1 { font-size: clamp(20px, 2.5vw, 28px); margin: 0 0 2rem; text-align: center; }
     h2 { font-size: clamp(16px, 2vw, 20px); margin: 2.5rem 0 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
     .widget-container { width: 100%; }
     .widget-container iframe {
@@ -16,54 +16,71 @@
       border-radius: 8px;
       display: block;
     }
+    hr { border: 0; height: 2px; background-color: #007bff; margin: 4rem auto; width: 80%; }
   </style>
 </head>
 <body>
   <h1 id="main-title">加载中…</h1>
 
-  <h2>近 7 天趋势</h2>
-  <div id="panel-7d" class="widget-container"></div>
+  <div id="main-container"></div>
 
-  <h2>近 1 个月趋势</h2>
-  <div id="panel-1m" class="widget-container"></div>
-
-  <h2>近 3 个月趋势</h2>
-  <div id="panel-3m" class="widget-container"></div>
-
-  <h2>近 12 个月趋势 (1年)</h2>
-  <div id="panel-12m" class="widget-container"></div>
-
-  <script src="https://ssl.gstatic.com/trends_nrtr/4116_RC01/embed_loader.js"></script>
+  <script src="https://ssl.gstatic.com/trends_nrtr/4215_RC01/embed_loader.js"></script>
   <script>
     // --- 配置区 ---
     const qs = new URLSearchParams(location.search);
-    const geo = (qs.get("geo") || "US").trim(); // 只保留 geo 作为 URL 参数
-    const CAT = 294; // 固定足球分类
+    const geo = (qs.get("geo") || "US").trim();
+    const CAT = 294;
 
     // --- 更新主标题 ---
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Taipei' });
     document.getElementById("main-title").textContent = `${geo} 足球分类趋势总览 (${today})`;
 
     // --- 定义所有需要渲染的时间范围 ---
     const timeframes = [
-      { id: '7d',  date: 'now 7-d' },
-      { id: '1m',  date: 'today 1-m' },
-      { id: '3m',  date: 'today 3-m' },
-      { id: '12m', date: 'today 12-m' }
+      { id: '7d',  date: 'now 7-d',    label: '近 7 天' },
+      { id: '1m',  date: 'today 1-m',    label: '近 1 个月' },
+      { id: '3m',  date: 'today 3-m',    label: '近 3 个月' },
+      { id: '12m', date: 'today 12-m',   label: '近 12 个月 (1年)' }
     ];
 
-    // --- 循环渲染所有 Trends 小组件 ---
+    // --- 获取主容器 ---
+    const mainContainer = document.getElementById('main-container');
+
+    // --- 创建一个函数来渲染单个小组件，方便复用 ---
+    function renderWidget(container, type, geo, time, cat, label) {
+      // 1. 创建 H2 标题元素
+      const titleElement = document.createElement('h2');
+      titleElement.textContent = label;
+
+      // 2. 创建用于放置小组件的 div 容器
+      const containerElement = document.createElement('div');
+      containerElement.className = 'widget-container';
+
+      // 3. 将创建好的标题和容器，按顺序添加到页面的主容器中
+      container.appendChild(titleElement);
+      container.appendChild(containerElement);
+
+      // 4. 在新创建的容器中渲染小组件
+      const exploreQuery = `cat=${cat}&date=${encodeURIComponent(time)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
+      trends.embed.renderExploreWidget(
+        type, // 决定是“热门”还是“飙升”
+        { "comparisonItem": [{ "geo": geo, "time": time }], "category": cat, "property": "" },
+        { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
+        containerElement
+      );
+    }
+
+    // --- 循环渲染所有“热门趋势”小组件 ---
     timeframes.forEach(tf => {
-      const container = document.getElementById(`panel-${tf.id}`);
-      if (container) {
-        const exploreQuery = `cat=${CAT}&date=${encodeURIComponent(tf.date)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
-        trends.embed.renderExploreWidget(
-          "RELATED_QUERIES",
-          { "comparisonItem": [{ "geo": geo, "time": tf.date }], "category": CAT, "property": "" },
-          { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
-          container
-        );
-      }
+      renderWidget(mainContainer, "RELATED_QUERIES", geo, tf.date, CAT, `${tf.label}热门趋势`);
+    });
+
+    // --- 添加一个分割线 ---
+    mainContainer.appendChild(document.createElement('hr'));
+
+    // --- 循环渲染所有“飙升趋势”小组件 ---
+    timeframes.forEach(tf => {
+      renderWidget(mainContainer, "RISING_QUERIES", geo, tf.date, CAT, `${tf.label}飙升趋势`);
     });
   </script>
 </body>
