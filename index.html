@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Google Trends 足球分类 (cat=294)</title>
+  <title>Google Trends 足球分类（cat=294）</title>
   <style>
     body { margin: 0; padding: 1.5rem; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #fafafa; color: #222; }
     h1 { font-size: clamp(20px, 2.5vw, 28px); margin: 0 0 2rem; text-align: center; }
-    .widget-container { width: 100%; margin-bottom: 2rem; /* 增加模块间距 */ }
+    h2 { font-size: clamp(18px, 2.2vw, 22px); margin: 3rem 0 1rem; border-bottom: 2px solid #007bff; padding-bottom: 0.5rem; color: #007bff; }
+    h3 { font-size: clamp(16px, 2vw, 20px); margin: 2.5rem 0 1rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+    .widget-container { width: 100%; margin-bottom: 2rem; }
     .widget-container iframe {
       width: 100% !important;
       height: 350px !important; /* 固定一个合适的高度 */
@@ -15,7 +17,7 @@
       border-radius: 8px;
       display: block;
     }
-    hr { border: 0; height: 1px; background-color: #ccc; margin: 3rem auto; width: 80%; }
+    hr { border: 0; height: 3px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0)); margin: 4rem 0; }
   </style>
 </head>
 <body>
@@ -27,64 +29,61 @@
   <script>
     // --- 配置区 ---
     const qs = new URLSearchParams(location.search);
-    const geo = (qs.get("geo") || "US").trim();
+    const geoPrimary = (qs.get("geo") || "US").trim(); // 第一个国家来自 URL 参数，默认为 US
+    const geoSecondary = 'CA'; // 第二个国家固定为加拿大 (CA)
     const CAT = 294;
 
     // --- 更新主标题 ---
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Taipei' });
-    document.getElementById("main-title").textContent = `${geo} 足球分类趋势总览 (${today})`;
+    document.getElementById("main-title").textContent = `${geoPrimary} vs ${geoSecondary} 足球分类热门趋势对比 (${today})`;
 
     // --- 定义所有需要渲染的时间范围 ---
     const timeframes = [
-      { id: '7d',  date: 'now 7-d' },
-      { id: '1m',  date: 'today 1-m' },
-      { id: '3m',  date: 'today 3-m' },
-      { id: '12m', date: 'today 12-m' }
+      { id: '7d',  date: 'now 7-d',    label: '近 7 天热门趋势' },
+      { id: '1m',  date: 'today 1-m',    label: '近 1 个月热门趋势' },
+      { id: '3m',  date: 'today 3-m',    label: '近 3 个月热门趋势' },
+      { id: '12m', date: 'today 12-m',   label: '近 12 个月热门趋势 (1年)' }
     ];
 
     // --- 获取主容器 ---
     const mainContainer = document.getElementById('main-container');
 
-    // --- 将要渲染的任务放入一个队列 ---
-    const renderQueue = [];
-    timeframes.forEach(tf => {
-        // 添加“热门”任务到队列
-        renderQueue.push({ type: "RELATED_QUERIES", time: tf.date, id_suffix: `${tf.id}-top` });
-    });
-    // 添加分割线任务
-    renderQueue.push({ type: 'SEPARATOR' });
-    timeframes.forEach(tf => {
-        // 添加“飙升”任务到队列
-        renderQueue.push({ type: "RISING_QUERIES", time: tf.date, id_suffix: `${tf.id}-rising` });
-    });
+    // --- 创建一个函数来渲染整个国家的部分，方便复用 ---
+    function renderCountrySection(geo) {
+      // 为国家创建一个总标题
+      const countryTitle = document.createElement('h2');
+      countryTitle.textContent = `${geo} 国家热门趋势`;
+      mainContainer.appendChild(countryTitle);
 
+      // 循环渲染这个国家的4个时间范围
+      timeframes.forEach(tf => {
+        // 创建小标题
+        const subtitle = document.createElement('h3');
+        subtitle.textContent = tf.label;
+        mainContainer.appendChild(subtitle);
+        
+        // 创建用于放置小组件的 div 容器 (ID 必须唯一)
+        const containerElement = document.createElement('div');
+        containerElement.id = `panel-${geo}-${tf.id}`; // 例如: panel-US-7d
+        containerElement.className = 'widget-container';
+        mainContainer.appendChild(containerElement);
 
-    // --- 带有延迟地处理渲染队列 ---
-    renderQueue.forEach((task, index) => {
-        // 为每个任务设置一个递增的延迟，给 Google 脚本喘息的时间
-        // 第1个任务延迟500ms，第2个1000ms，以此类推
-        setTimeout(() => {
-            if (task.type === 'SEPARATOR') {
-                mainContainer.appendChild(document.createElement('hr'));
-                return;
-            }
+        // 在新创建的容器中渲染小组件
+        const exploreQuery = `cat=${CAT}&date=${encodeURIComponent(tf.date)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
+        trends.embed.renderExploreWidget(
+          "RELATED_QUERIES", // 只使用热门查询
+          { "comparisonItem": [{ "geo": geo, "time": tf.date }], "category": CAT, "property": "" },
+          { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
+          containerElement
+        );
+      });
+    }
 
-            // 动态创建用于放置小组件的 div 容器
-            const containerElement = document.createElement('div');
-            containerElement.id = `panel-${CAT}-${geo}-${task.id_suffix}`;
-            containerElement.className = 'widget-container';
-            mainContainer.appendChild(containerElement);
-
-            // 在新创建的容器中渲染小组件
-            const exploreQuery = `cat=${CAT}&date=${encodeURIComponent(task.time)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
-            trends.embed.renderExploreWidget(
-                task.type,
-                { "comparisonItem": [{ "geo": geo, "time": task.time }], "category": CAT, "property": "" },
-                { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
-                containerElement
-            );
-        }, index * 500); // 核心修改：每个任务之间间隔 500 毫秒
-    });
+    // --- 依次渲染两个国家的数据 ---
+    renderCountrySection(geoPrimary);
+    mainContainer.appendChild(document.createElement('hr')); // 添加一个华丽的分割线
+    renderCountrySection(geoSecondary);
+    
   </script>
 </body>
 </html>
