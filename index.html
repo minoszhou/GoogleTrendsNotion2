@@ -45,35 +45,45 @@
     // --- 获取主容器 ---
     const mainContainer = document.getElementById('main-container');
 
-    // --- 创建一个函数来渲染单个小组件，方便复用 ---
-    function renderWidget(container, type, geo, time, cat, id_suffix) {
-      // 动态创建用于放置小组件的 div 容器
-      const containerElement = document.createElement('div');
-      containerElement.id = `panel-${cat}-${geo}-${id_suffix}`;
-      containerElement.className = 'widget-container';
-      container.appendChild(containerElement);
-
-      // 在新创建的容器中渲染小组件
-      const exploreQuery = `cat=${cat}&date=${encodeURIComponent(time)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
-      trends.embed.renderExploreWidget(
-        type,
-        { "comparisonItem": [{ "geo": geo, "time": time }], "category": cat, "property": "" },
-        { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
-        containerElement
-      );
-    }
-
-    // --- 循环渲染所有“热门趋势”小组件 ---
+    // --- 将要渲染的任务放入一个队列 ---
+    const renderQueue = [];
     timeframes.forEach(tf => {
-      renderWidget(mainContainer, "RELATED_QUERIES", geo, tf.date, CAT, `${tf.id}-top`);
+        // 添加“热门”任务到队列
+        renderQueue.push({ type: "RELATED_QUERIES", time: tf.date, id_suffix: `${tf.id}-top` });
+    });
+    // 添加分割线任务
+    renderQueue.push({ type: 'SEPARATOR' });
+    timeframes.forEach(tf => {
+        // 添加“飙升”任务到队列
+        renderQueue.push({ type: "RISING_QUERIES", time: tf.date, id_suffix: `${tf.id}-rising` });
     });
 
-    // --- 添加一个分割线 (可选，用于视觉区隔) ---
-    mainContainer.appendChild(document.createElement('hr'));
 
-    // --- 循环渲染所有“飙升趋势”小组件 ---
-    timeframes.forEach(tf => {
-      renderWidget(mainContainer, "RISING_QUERIES", geo, tf.date, CAT, `${tf.id}-rising`);
+    // --- 带有延迟地处理渲染队列 ---
+    renderQueue.forEach((task, index) => {
+        // 为每个任务设置一个递增的延迟，给 Google 脚本喘息的时间
+        // 第1个任务延迟500ms，第2个1000ms，以此类推
+        setTimeout(() => {
+            if (task.type === 'SEPARATOR') {
+                mainContainer.appendChild(document.createElement('hr'));
+                return;
+            }
+
+            // 动态创建用于放置小组件的 div 容器
+            const containerElement = document.createElement('div');
+            containerElement.id = `panel-${CAT}-${geo}-${task.id_suffix}`;
+            containerElement.className = 'widget-container';
+            mainContainer.appendChild(containerElement);
+
+            // 在新创建的容器中渲染小组件
+            const exploreQuery = `cat=${CAT}&date=${encodeURIComponent(task.time)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
+            trends.embed.renderExploreWidget(
+                task.type,
+                { "comparisonItem": [{ "geo": geo, "time": task.time }], "category": CAT, "property": "" },
+                { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
+                containerElement
+            );
+        }, index * 500); // 核心修改：每个任务之间间隔 500 毫秒
     });
   </script>
 </body>
