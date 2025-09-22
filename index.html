@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Google Shopping 热门搜索</title>
+  <title>Google Trends 足球分类 (Google购物)</title>
   <style>
     body{margin:0;padding:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#fafafa;color:#222}
     h1{font-size:clamp(16px,2.2vw,20px);margin:0 0 8px;line-height:1.25}
@@ -29,7 +29,8 @@
     const compact = qs.get("compact")==="1";
 
     // ▼▼▼【核心修改点】▼▼▼
-    // 将搜索属性固定为 "Google Shopping"
+    // 同时保留足球分类和Google购物属性
+    const CAT = 294;
     const GPROP = "froogle";
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
@@ -43,15 +44,17 @@
     const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
     const titleEl = document.getElementById("title");
-    titleEl.textContent = `${geo} ${dateLabel} Google购物热门 ${todayStr}`; // 更新了标题
+    titleEl.textContent = `${geo} ${dateLabel} 足球分类 (Google购物) ${todayStr}`; // 更新标题以反映内容
     if (compact) titleEl.style.display = "none";
 
+    // 在查询字符串中同时包含 cat 和 gprop
     const exploreQuery =
-      `date=${encodeURIComponent(date)}&geo=${encodeURIComponent(geo)}&hl=${encodeURIComponent(hl)}&gprop=${GPROP}&cmpt=q`; // 添加了 gprop 参数
+      `cat=${CAT}&date=${encodeURIComponent(date)}&geo=${encodeURIComponent(geo)}&hl=${encodeURIComponent(hl)}&gprop=${GPROP}&cmpt=q`;
 
     trends.embed.renderExploreWidget(
       "RELATED_QUERIES",
-      { "comparisonItem":[{ "geo": geo, "time": date, "keyword": "shopping" }], "property": GPROP }, // ★ 修改点1: 指定 property
+      // 在主参数中同时包含 category 和 property
+      { "comparisonItem":[{ "geo": geo, "time": date }], "category": CAT, "property": GPROP },
       { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
       document.getElementById("panel")
     );
