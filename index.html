@@ -3,75 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Google Trends 足球分类（cat=294）</title>
+  <title>Google Shopping 热门搜索</title>
   <style>
-    body { margin: 0; padding: 1.5rem; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #fafafa; color: #222; }
-    h1 { font-size: clamp(20px, 2.5vw, 28px); margin: 0 0 2rem; text-align: center; }
-    .widget-container { width: 100%; margin-bottom: 2rem; }
-    .widget-container iframe {
-      width: 100% !important;
-      height: 350px !important; /* 固定一个合适的高度 */
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      display: block;
+    body{margin:0;padding:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#fafafa;color:#222}
+    h1{font-size:clamp(16px,2.2vw,20px);margin:0 0 8px;line-height:1.25}
+    #panel{width:100%}
+    #panel iframe{
+      width:100% !important;
+      height:clamp(320px,72vh,760px) !important;
+      border:0;display:block
     }
-    hr { border: 0; height: 3px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0)); margin: 2rem 0; }
   </style>
 </head>
 <body>
-  <h1 id="main-title">加载中…</h1>
+  <h1 id="title">加载中…</h1>
+  <div id="panel"></div>
 
-  <div id="main-container"></div>
-
-  <script src="https://ssl.gstatic.com/trends_nrtr/4215_RC01/embed_loader.js"></script>
+  <script src="https://ssl.gstatic.com/trends_nrtr/4116_RC01/embed_loader.js"></script>
   <script>
-    // --- 配置区 ---
-    const qs = new URLSearchParams(location.search);
-    const geoPrimary = (qs.get("geo") || "US").trim();
-    const geoSecondary = 'CA';
-    const CAT = 294;
+    const qs      = new URLSearchParams(location.search);
+    const geo     = (qs.get("geo")  || "US").trim();
+    const date    = (qs.get("date") || "now 7-d").trim();
+    const hl      = (qs.get("hl")   || "zh-CN").trim();
+    const h       = qs.get("h");
+    const compact = qs.get("compact")==="1";
 
-    // --- 更新主标题 (已按要求简化) ---
-    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Taipei' });
-    document.getElementById("main-title").textContent = `足球分类趋势总览 (${today})`;
+    // ▼▼▼【核心修改点】▼▼▼
+    // 将搜索属性固定为 "Google Shopping"
+    const GPROP = "froogle";
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-    // --- 定义所有需要渲染的时间范围 ---
-    const timeframes = [
-      { id: '7d',  date: 'now 7-d' },
-      { id: '1m',  date: 'today 1-m' },
-      { id: '3m',  date: 'today 3-m' },
-      { id: '12m', date: 'today 12-m' }
-    ];
+    const dateLabel = ({
+      "now 1-H":"近 1 小时","now 4-H":"近 4 小时","now 1-d":"近 1 天",
+      "now 7-d":"近 7 天","today 1-m":"近 1 个月","today 3-m":"近 3 个月",
+      "today 12-m":"近 12 个月","all":"全部时间"
+    })[date] || date;
 
-    // --- 获取主容器 ---
-    const mainContainer = document.getElementById('main-container');
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
-    // --- 创建一个函数来渲染单个国家的部分 ---
-    function renderCountrySection(geo) {
-      // 循环渲染这个国家的4个时间范围
-      timeframes.forEach(tf => {
-        // 直接创建用于放置小组件的 div 容器 (ID 必须唯一)
-        const containerElement = document.createElement('div');
-        containerElement.id = `panel-${geo}-${tf.id}`; // 例如: panel-US-7d
-        containerElement.className = 'widget-container';
-        mainContainer.appendChild(containerElement);
+    const titleEl = document.getElementById("title");
+    titleEl.textContent = `${geo} ${dateLabel} Google购物热门 ${todayStr}`; // 更新了标题
+    if (compact) titleEl.style.display = "none";
 
-        // 在新创建的容器中渲染小组件
-        const exploreQuery = `cat=${CAT}&date=${encodeURIComponent(tf.date)}&geo=${encodeURIComponent(geo)}&hl=zh-CN&cmpt=q&gprop=`;
-        trends.embed.renderExploreWidget(
-          "RELATED_QUERIES", // 只使用热门查询
-          { "comparisonItem": [{ "geo": geo, "time": tf.date }], "category": CAT, "property": "" },
-          { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
-          containerElement
-        );
-      });
+    const exploreQuery =
+      `date=${encodeURIComponent(date)}&geo=${encodeURIComponent(geo)}&hl=${encodeURIComponent(hl)}&gprop=${GPROP}&cmpt=q`; // 添加了 gprop 参数
+
+    trends.embed.renderExploreWidget(
+      "RELATED_QUERIES",
+      { "comparisonItem":[{ "geo": geo, "time": date, "keyword": "shopping" }], "property": GPROP }, // ★ 修改点1: 指定 property
+      { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
+      document.getElementById("panel")
+    );
+
+    if (h) {
+      const applyHeight = () => {
+        const ifr = document.querySelector("#panel iframe");
+        if (ifr) ifr.style.height = `${Math.max(220, Math.min(1200, parseInt(h,10)||0))}px`;
+      };
+      new MutationObserver((m,obs)=>{ applyHeight(); obs.disconnect(); })
+        .observe(document.getElementById("panel"), {childList:true,subtree:true});
+      window.addEventListener("resize", applyHeight);
     }
-
-    // --- 依次渲染两个国家的数据 ---
-    renderCountrySection(geoPrimary);
-    mainContainer.appendChild(document.createElement('hr')); // 添加分割线
-    renderCountrySection(geoSecondary);
-    
   </script>
 </body>
 </html>
