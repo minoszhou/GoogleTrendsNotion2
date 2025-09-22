@@ -19,7 +19,11 @@
   <h1 id="title">加载中…</h1>
   <div id="panel"></div>
 
+  <!-- ▼▼▼【核心修正点】▼▼▼ -->
+  <!-- 使用您提供的、正确的、新版加载脚本 -->
   <script src="https://ssl.gstatic.com/trends_nrtr/4215_RC01/embed_loader.js"></script>
+  <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
+
   <script>
     const qs      = new URLSearchParams(location.search);
     const geo     = (qs.get("geo")  || "US").trim();
@@ -28,11 +32,8 @@
     const h       = qs.get("h");
     const compact = qs.get("compact")==="1";
 
-    // ▼▼▼【核心修改点】▼▼▼
-    // 同时保留足球分类，并添加Google购物属性
     const CAT = 294;
     const GPROP = "froogle";
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
     const dateLabel = ({
       "now 1-H":"近 1 小时","now 4-H":"近 4 小时","now 1-d":"近 1 天",
@@ -44,16 +45,14 @@
     const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
     const titleEl = document.getElementById("title");
-    titleEl.textContent = `${geo} ${dateLabel} 足球分类 (Google购物) ${todayStr}`; // 更新标题以反映内容
+    titleEl.textContent = `${geo} ${dateLabel} 足球分类 (Google购物) ${todayStr}`;
     if (compact) titleEl.style.display = "none";
-
-    // 在查询字符串中同时包含 cat 和 gprop
+    
     const exploreQuery =
       `cat=${CAT}&date=${encodeURIComponent(date)}&geo=${encodeURIComponent(geo)}&hl=${encodeURIComponent(hl)}&gprop=${GPROP}`;
 
     trends.embed.renderExploreWidget(
       "RELATED_QUERIES",
-      // 在主参数中同时包含 category 和 property
       { "comparisonItem":[{ "geo": geo, "time": date }], "category": CAT, "property": GPROP },
       { "exploreQuery": exploreQuery, "guestPath": "https://trends.google.com/trends/embed/" },
       document.getElementById("panel")
