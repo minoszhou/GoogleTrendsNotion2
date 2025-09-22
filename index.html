@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Google Trends 足球分类 (Google购物)</title>
+  <title>Google Trends · 足球分类 (Google购物)</title>
   <style>
     body{margin:0;padding:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#fafafa;color:#222}
     h1{font-size:clamp(16px,2.2vw,20px);margin:0 0 8px;line-height:1.25}
@@ -19,7 +19,7 @@
   <h1 id="title">加载中…</h1>
   <div id="panel"></div>
 
-  <script src="https://ssl.gstatic.com/trends_nrtr/4116_RC01/embed_loader.js"></script>
+  <script src="https://ssl.gstatic.com/trends_nrtr/4215_RC01/embed_loader.js"></script>
   <script>
     const qs      = new URLSearchParams(location.search);
     const geo     = (qs.get("geo")  || "US").trim();
@@ -29,7 +29,7 @@
     const compact = qs.get("compact")==="1";
 
     // ▼▼▼【核心修改点】▼▼▼
-    // 同时保留足球分类和Google购物属性
+    // 同时保留足球分类，并添加Google购物属性
     const CAT = 294;
     const GPROP = "froogle";
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -49,7 +49,7 @@
 
     // 在查询字符串中同时包含 cat 和 gprop
     const exploreQuery =
-      `cat=${CAT}&date=${encodeURIComponent(date)}&geo=${encodeURIComponent(geo)}&hl=${encodeURIComponent(hl)}&gprop=${GPROP}&cmpt=q`;
+      `cat=${CAT}&date=${encodeURIComponent(date)}&geo=${encodeURIComponent(geo)}&hl=${encodeURIComponent(hl)}&gprop=${GPROP}`;
 
     trends.embed.renderExploreWidget(
       "RELATED_QUERIES",
